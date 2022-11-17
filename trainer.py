@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 from model import (Generator)
 from radam import RAdam
-from collections import OrderedDict
+# from collections import OrderedDict
 
 class Trainer(nn.Module):
     def __init__(self, config):
@@ -30,7 +30,9 @@ class Trainer(nn.Module):
 
         self.device = 'cpu'
         if torch.cuda.is_available():
-            self.device = torch.device("cuda:{}".format(torch.cuda.current_device()))
+            self.device = torch.cuda.current_device()
+            #for testing
+            # self.device = torch.device("cuda:{}".format(torch.cuda.current_device()))
             self.gen = nn.DataParallel(self.gen).to(self.device)
             self.gen_ema = nn.DataParallel(self.gen_ema).to(self.device)
 
@@ -160,18 +162,22 @@ class Trainer(nn.Module):
             model_path = get_model_list(model_dir, "gen")   # last model
 
         state_dict = torch.load(model_path, map_location=self.device)
-        gen_dict = OrderedDict()
-        for key, value in state_dict["gen"].items():
-            if not key.startswith("module."):
-                key = "module." + key
-            gen_dict[key] = value
-        self.gen.load_state_dict(gen_dict)
-        gen_ema_dict = OrderedDict()
-        for key, value in state_dict["gen_ema"].items():
-            if not key.startswith("module."):
-                key = "module." + key
-            gen_ema_dict[key] = value
-        self.gen_ema.load_state_dict(gen_ema_dict)
+        self.gen.load_state_dict(state_dict['gen'])
+        self.gen_ema.load_state_dict(state_dict['gen_ema'])
+        #for pretrained network
+
+        # gen_dict = OrderedDict()
+        # for key, value in state_dict["gen"].items():
+        #     if not key.startswith("module."):
+        #         key = "module." + key
+        #     gen_dict[key] = value
+        # self.gen.load_state_dict(gen_dict)
+        # gen_ema_dict = OrderedDict()
+        # for key, value in state_dict["gen_ema"].items():
+        #     if not key.startswith("module."):
+        #         key = "module." + key
+        #     gen_ema_dict[key] = value
+        # self.gen_ema.load_state_dict(gen_ema_dict)
 
         epochs = int(model_path[-6:-3])
         print('Load from epoch %d' % epochs)

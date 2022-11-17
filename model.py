@@ -124,7 +124,7 @@ class Encoder_con(nn.Module):
         channels *= 2
 
         # bottleneck
-        self.bottleneck = ResStgcnBlock(channels,
+        self.bottleneck = StgcnBlock(channels,
                                         channels, 
                                         kernel_size=ks_bottleneck, 
                                         stride=1, 
@@ -235,7 +235,7 @@ class Encoder_sty(nn.Module):
         channels *= 2
 
         # bottleneck
-        self.bottleneck = ResStgcnBlock(channels,
+        self.bottleneck = StgcnBlock(channels,
                                         channels, 
                                         kernel_size=ks_bottleneck, 
                                         stride=1, 
@@ -316,7 +316,7 @@ class Decoder(nn.Module):
         ks_joint = (7, spatial_kernel_size_j)
 
         # bottleneck
-        self.bottleneck = ResBPStyleNet(latent_dim,   # style dim
+        self.bottleneck = BPStyleNet(latent_dim,   # style dim
                                         channels,     # input channel
                                         channels,     # output channel
                                         kernel_size=ks_bottleneck, 
@@ -401,11 +401,11 @@ class Decoder(nn.Module):
         # G1
         x = self.up_MidToJoint(x)
         x = self.up_temp2(x, scale_factor=(2, 1), mode='nearest')
-        x = self.joint(x, 
-                       sty_leftleg[3], sty_rightleg[3], 
-                       sty_spine[3], 
-                       sty_leftarm[3], sty_rightarm[3], 
-                       self.A_j * self.edge_importance_j)
+        # x = self.joint(x,
+        #                sty_leftleg[3], sty_rightleg[3],
+        #                sty_spine[3],
+        #                sty_leftarm[3], sty_rightarm[3],
+        #                self.A_j * self.edge_importance_j)
 
         # to mot
         x = self.to_mot(x)
