@@ -35,5 +35,5 @@ sm_rec_w: 1
 sm_cyc_w: 1
 
 # step size
-log_every: 5       # iter
+log_every: 5     # iter
 save_every: 5       # epoch

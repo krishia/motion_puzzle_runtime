@@ -337,22 +337,22 @@ class Decoder(nn.Module):
         self.up_temp1 = F.interpolate        # (x, scale_factor=(2, 1), mode='nearest')
         self.mid = BPStyleNet(latent_dim,
                               channels, 
-                              channels//2, 
+                              channels//4,
                               kernel_size=ks_mid, 
                               stride=1,
                               activation='lrelu') 
-        channels //= 2
-
+        channels //= 4
+        # for to_mot function
         # G1
         self.up_MidToJoint = UnpoolMidToJoint()
         self.up_temp2 = F.interpolate
-        self.joint = BPStyleNet(latent_dim,
-                                channels,
-                                channels//2, 
-                                kernel_size=ks_joint, 
-                                stride=1,
-                                activation='lrelu')
-        channels //= 2
+        # self.joint = BPStyleNet(latent_dim,
+        #                         channels,
+        #                         channels//2,
+        #                         kernel_size=ks_joint,
+        #                         stride=1,
+        #                         activation='lrelu')
+        # channels //= 2
 
         # to mot
         self.to_mot = nn.Sequential(nn.LeakyReLU(0.2),

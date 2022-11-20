@@ -125,15 +125,15 @@ def main():
         con_gt = outputs["con_gt"].squeeze()
         sty_gt = outputs["sty_gt"].squeeze()
 
-        rec = rec.numpy() * std + mean
-        tra = tra.numpy() * std + mean
-        con_gt = con_gt.numpy() * std + mean
-        sty_gt = sty_gt.numpy() * std + mean
+        # rec = rec.numpy() * std + mean
+        # tra = tra.numpy() * std + mean
+        # con_gt = con_gt.numpy() * std + mean
+        # sty_gt = sty_gt.numpy() * std + mean
         #for pretrained network
-        # rec = rec.cpu().numpy() * std + mean
-        # tra = tra.cpu().numpy() * std + mean
-        # con_gt = con_gt.cpu().numpy() * std + mean
-        # sty_gt = sty_gt.cpu().numpy() * std + mean
+        rec = rec.cpu().numpy() * std + mean
+        tra = tra.cpu().numpy() * std + mean
+        con_gt = con_gt.cpu().numpy() * std + mean
+        sty_gt = sty_gt.cpu().numpy() * std + mean
 
         tra_root = cnt_root
 
