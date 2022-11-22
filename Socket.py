@@ -70,14 +70,24 @@ std = np.load(std_path, allow_pickle=True).astype(np.float32)
 mean = mean[:, np.newaxis, np.newaxis]
 std = std[:, np.newaxis, np.newaxis]
 
-output = "None"
+socket_output = "None"
 
+sty_mot, sty_root, sty_fc = \
+    process_data('./datasets/cmu/test_bvh/142_21.bvh', divide=False)
+sty_mot, sty_root, sty_fc = sty_mot[0], sty_root[0], sty_fc[0]
+
+sty_motion_raw = np.transpose(sty_mot, (2, 1, 0))
+sty_motion = (sty_motion_raw - mean) / std
+sty_motion = torch.from_numpy(sty_motion[np.newaxis].astype('float32'))
+sty_data = sty_motion.to(device)
+
+
+# ii = 0
 while True:
     #  Wait for next request from client
     message = socket.recv()
     message = message.decode('utf-8')
     # print("Received request: %s" % message)
-    start_t = timeit.default_timer()
 
     if message != '':
         # add joint to frame
@@ -150,35 +160,33 @@ while True:
 
             # normalization
             cnt_motion_raw = np.transpose(motion, (2, 1, 0))
-            sty_motion_raw = np.transpose(motion, (2, 1, 0))
-            # sty_motion_raw = np.transpose(sty_mot, (2, 1, 0))
             cnt_motion = (cnt_motion_raw - mean) / std
-            sty_motion = (sty_motion_raw - mean) / std
 
             cnt_motion = torch.from_numpy(cnt_motion[np.newaxis].astype('float32'))  # (1, dim, joint, seq)
-            sty_motion = torch.from_numpy(sty_motion[np.newaxis].astype('float32'))
 
             loss_test = {}
             with torch.no_grad():
+                start_t = timeit.default_timer()
                 cnt_data = cnt_motion.to(device)
-                sty_data = sty_motion.to(device)
 
                 outputs = trainer.test(cnt_data, sty_data)
                 output = outputs["stylized"].squeeze()
                 output = output.cpu().numpy() * std + mean
                 output = np.swapaxes(output, 0, 2)
+                socket_output = "not none"
+                # ii += 1
 
-            terminate_t = timeit.default_timer()
-            FPS = (terminate_t - start_t)
-            print(FPS)
-            # root = new_frame[:,0,0:3]
+                terminate_t = timeit.default_timer()
+                FPS = (terminate_t - start_t)
+                print(FPS)
+
+            # root = motion[:,0,0:3]
             # root = np.reshape(root, (frame_cnt, 1, 3))
             # cnt_mot, cnt_root, cnt_fc = \
             #     process_data("./datasets/cmu/test_bvh/127_21.bvh", divide=False)
             # root = cnt_root[0]
-
-            # BUILD BVH FILE
-            # ii += 1
+            #
+            # # BUILD BVH FILE
             # if ii == 100:
             #     content_bvh_file = "./datasets/cmu/test_bvh/127_21.bvh"
             #     rest, names, _ = BVH.load(content_bvh_file)
@@ -187,9 +195,9 @@ while True:
             #     offsets = rest.copy().offsets[chosen_joints]
             #     orients = Quaternions.id(len(parents))
             #
-            #     new_frame = np.swapaxes(new_frame, 0, 2)
+            #     new_frame = np.swapaxes(output, 0, 2)
             #     print(new_frame.shape)
-            #     motion = compute_posture(new_frame, root_full)
+            #     motion = compute_posture(new_frame, root)
             #
             #     local_joint_xforms = motion['local_joint_xforms']
             #
@@ -217,9 +225,9 @@ while True:
 
     #  Send reply back to client
     #  In the real world usage, after you finish your work, send your output here
-    if not output == "None":
-        output = trajectory2string(output[output.shape[0] - 1, :, :]).replace('[', '').replace(']', '').replace(' ', '')
-        socket.send_string(output)
-        output = "None"
+    if not socket_output == "None":
+        socket_output = trajectory2string(output[output.shape[0] - 1, :, :]).replace('[', '').replace(']', '').replace(' ', '')
+        socket.send_string(socket_output)
+        socket_output = "None"
     else:
         socket.send(b"")
