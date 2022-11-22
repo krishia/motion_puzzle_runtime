@@ -41,7 +41,7 @@ socket = context.socket(zmq.REP)
 socket.bind("tcp://*:5555")
 
 frame = []
-frame_cnt = 30
+frame_cnt = 60
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 chosen_joints = np.array([
@@ -72,15 +72,22 @@ std = std[:, np.newaxis, np.newaxis]
 
 socket_output = "None"
 
-sty_mot, sty_root, sty_fc = \
-    process_data('./datasets/cmu/test_bvh/142_21.bvh', divide=False)
-sty_mot, sty_root, sty_fc = sty_mot[0], sty_root[0], sty_fc[0]
+current_sty_index = 0
+sty_data_list = []
+sty_data_file_list = ['./datasets/Xia/test_bvh/strutting_normal_walking_000.bvh',
+                      './datasets/Xia/test_bvh/old_normal_walking_000.bvh',
+                      './datasets/Xia/test_bvh/proud_normal_walking_000.bvh',
+                      './datasets/Xia/test_bvh/childlike_normal_walking_000.bvh',
+                      './datasets/Xia/test_bvh/depressed_normal_walking_000.bvh']
+for i in range(len(sty_data_file_list)):
+    sty_mot, sty_root, sty_fc = process_data(sty_data_file_list[i], divide=False)
+    sty_mot, sty_root, sty_fc = sty_mot[0], sty_root[0], sty_fc[0]
 
-sty_motion_raw = np.transpose(sty_mot, (2, 1, 0))
-sty_motion = (sty_motion_raw - mean) / std
-sty_motion = torch.from_numpy(sty_motion[np.newaxis].astype('float32'))
-sty_data = sty_motion.to(device)
-
+    sty_motion_raw = np.transpose(sty_mot, (2, 1, 0))
+    sty_motion = (sty_motion_raw - mean) / std
+    sty_motion = torch.from_numpy(sty_motion[np.newaxis].astype('float32'))
+    sty_data = sty_motion.to(device)
+    sty_data_list.append(sty_data)
 
 # ii = 0
 while True:
@@ -93,7 +100,8 @@ while True:
         # add joint to frame
         joints = []
         data = message.split('|')
-        for value in data:
+        current_sty_index = int(data[0])
+        for value in data[1:]:
             joint = []
             data2 = value.split(',')
             for value2 in data2:
@@ -169,7 +177,7 @@ while True:
                 start_t = timeit.default_timer()
                 cnt_data = cnt_motion.to(device)
 
-                outputs = trainer.test(cnt_data, sty_data)
+                outputs = trainer.test(cnt_data, sty_data_list[current_sty_index])
                 output = outputs["stylized"].squeeze()
                 output = output.cpu().numpy() * std + mean
                 output = np.swapaxes(output, 0, 2)
