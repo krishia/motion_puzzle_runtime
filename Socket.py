@@ -14,22 +14,27 @@ from motion.Pivots import Pivots
 from preprocess.generate_dataset import process_data
 from etc.utils import ensure_dirs, get_config
 
+
 def softmax(x, **kw):
     softness = kw.pop('softness', 1.0)
     maxi, mini = np.max(x, **kw), np.min(x, **kw)
     return maxi + np.log(softness + np.exp(mini - maxi))
 
+
 def softmin(x, **kw):
     return -softmax(-x, **kw)
+
 
 def initialize_path(config):
     config['main_dir'] = os.path.join('.', config['name'])
     config['model_dir'] = os.path.join(config['main_dir'], "pth")
     ensure_dirs([config['main_dir'], config['model_dir']])
 
+
 def trajectory2string(tra):
-    tra = np.array2string(tra)
+    tra = np.array2string(tra, separator=',')
     return tra
+
 
 context = zmq.Context()
 socket = context.socket(zmq.REP)
@@ -41,8 +46,8 @@ frame_cnt = 30
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 chosen_joints = np.array([
     0,
-    2,  3,  4,  5,
-    7,  8,  9, 10,
+    2, 3, 4, 5,
+    7, 8, 9, 10,
     12, 13, 15, 16,
     18, 19, 20, 22,
     25, 26, 27, 29])
@@ -64,6 +69,8 @@ mean = np.load(mean_path, allow_pickle=True).astype(np.float32)
 std = np.load(std_path, allow_pickle=True).astype(np.float32)
 mean = mean[:, np.newaxis, np.newaxis]
 std = std[:, np.newaxis, np.newaxis]
+
+output = "None"
 
 while True:
     #  Wait for next request from client
@@ -151,18 +158,15 @@ while True:
             cnt_motion = torch.from_numpy(cnt_motion[np.newaxis].astype('float32'))  # (1, dim, joint, seq)
             sty_motion = torch.from_numpy(sty_motion[np.newaxis].astype('float32'))
 
-
             loss_test = {}
             with torch.no_grad():
                 cnt_data = cnt_motion.to(device)
                 sty_data = sty_motion.to(device)
 
-                outputs, loss_test_dict = trainer.test(cnt_data, sty_data)
-                tra = outputs["stylized"].squeeze()
-                tra = tra.cpu().numpy() * std + mean
-                tra = np.swapaxes(tra, 0, 2)
-                print(tra.shape)
-                # socket.send(trajectory2string(tra).encode('ascii'))
+                outputs = trainer.test(cnt_data, sty_data)
+                output = outputs["stylized"].squeeze()
+                output = output.cpu().numpy() * std + mean
+                output = np.swapaxes(output, 0, 2)
 
             terminate_t = timeit.default_timer()
             FPS = (terminate_t - start_t)
@@ -213,4 +217,9 @@ while True:
 
     #  Send reply back to client
     #  In the real world usage, after you finish your work, send your output here
-    socket.send(b"World")
+    if not output == "None":
+        output = trajectory2string(output[output.shape[0] - 1, :, :]).replace('[', '').replace(']', '').replace(' ', '')
+        socket.send_string(output)
+        output = "None"
+    else:
+        socket.send(b"")
