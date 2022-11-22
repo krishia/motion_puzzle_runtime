@@ -29,8 +29,7 @@ class Generator(nn.Module):
     
     def forward(self, xa, xb, phase='train'):       # x:  (N, C, V, T)
         # encode
-        c_xa = self.enc_content(xa)     # [(n, c, 21, 4t), ..., (n, 4c, 5, t)] 
-        c_xb = self.enc_content(xb)
+        c_xa = self.enc_content(xa)     # [(n, c, 21, 4t), ..., (n, 4c, 5, t)]
         s_xa = self.enc_style(xa)   
         s_xb = self.enc_style(xb)
 
@@ -40,18 +39,8 @@ class Generator(nn.Module):
 
         # decode
         xab = self.dec(c_xa[-1], s_mix[0][::-1], s_mix[1][::-1], s_mix[2][::-1], s_mix[3][::-1], s_mix[4][::-1])
-        xaa = self.dec(c_xa[-1], s_xa[::-1], s_xa[::-1], s_xa[::-1], s_xa[::-1], s_xa[::-1])  # reconstruction
-        xbb = self.dec(c_xb[-1], s_xb[::-1], s_xb[::-1], s_xb[::-1], s_xb[::-1], s_xb[::-1])  # reconstruction
-
-        c_xab = self.enc_content(xab)
-        xaba = self.dec(c_xab[-1], s_xa[::-1], s_xa[::-1], s_xa[::-1], s_xa[::-1], s_xa[::-1])
-        if len(bdy_part_select) == 0:
-            s_xab = self.enc_style(xab)        
-            xabb = self.dec(c_xb[-1], s_xab[::-1], s_xab[::-1], s_xab[::-1], s_xab[::-1], s_xab[::-1])
-        else:
-            xabb = xb
         
-        return xaa, xbb, xab, xaba, xabb
+        return xab
     
     def _init_weights(self, module):
         if isinstance(module, (nn.Conv2d, nn.Conv1d)):

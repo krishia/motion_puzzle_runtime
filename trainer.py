@@ -110,7 +110,7 @@ class Trainer(nn.Module):
         config = self.config
         self.gen_ema.eval()
 
-        xaa, xbb, xab, xaba, xabb = self.gen_ema(xa, xb, phase='test')
+        xab = self.gen_ema(xa, xb, phase='test')
 
         # loss_recon = F.l1_loss(xaa, xa) + F.l1_loss(xbb, xb)
         # loss_cyc_con = F.l1_loss(xaba, xa)
@@ -135,10 +135,7 @@ class Trainer(nn.Module):
         #           'loss_sm_cyc': loss_sm_cyc}
         
         out_dict = {
-            "recon_con": xaa,
             "stylized": xab,
-            "con_gt": xa,
-            "sty_gt": xb
         }
 
         return out_dict
