@@ -1,5 +1,6 @@
 ## Motion Puzzle runtime implementation
 original repo: https://github.com/DK-Jang/motion_puzzle
+<br/>
 original paper:
 Jang, Deok-Kyeong, Soomin Park, and Sung-Hee Lee. "Motion Puzzle: Arbitrary Motion Style Transfer by Body Part." ACM Transactions on Graphics (TOG) (2022).
 
