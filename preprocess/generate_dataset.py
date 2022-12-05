@@ -6,10 +6,10 @@ import scipy.ndimage.filters as filters
 
 sys.path.append('../motion')
 sys.path.append('../etc')
-from Pivots import Pivots
-from Quaternions import Quaternions
-import Animation as Animation
-import BVH as BVH
+from motion.Pivots import Pivots
+from motion.Quaternions import Quaternions
+import motion.Animation as Animation
+import motion.BVH as BVH
 
 def softmax(x, **kw):
     softness = kw.pop('softness', 1.0)

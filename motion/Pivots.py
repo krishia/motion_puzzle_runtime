@@ -1,6 +1,6 @@
 import numpy as np
 
-from Quaternions import Quaternions
+from motion.Quaternions import Quaternions
 
 class Pivots:    
     """

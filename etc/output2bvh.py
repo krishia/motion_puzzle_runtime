@@ -1,7 +1,7 @@
 import numpy as np
 import sys
 sys.path.append('../motion')
-from Quaternions import Quaternions
+from motion.Quaternions import Quaternions
 
 chosen_joints = np.array([
     0,

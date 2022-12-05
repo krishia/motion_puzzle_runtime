@@ -110,38 +110,35 @@ class Trainer(nn.Module):
         config = self.config
         self.gen_ema.eval()
 
-        xaa, xbb, xab, xaba, xabb = self.gen_ema(xa, xb, phase='test')
+        xab = self.gen_ema(xa, xb, phase='test')
 
-        loss_recon = F.l1_loss(xaa, xa) + F.l1_loss(xbb, xb)
-        loss_cyc_con = F.l1_loss(xaba, xa)
-        loss_cyc_sty = F.l1_loss(xabb, xb)
-        loss_sm_rec = F.l1_loss((xaa[..., :-1] - xaa[..., 1:]), (xa[..., :-1] - xa[..., 1:])) + \
-                       F.l1_loss((xbb[..., :-1] - xbb[..., 1:]), (xb[..., :-1] - xb[..., 1:]))
-        loss_sm_cyc = F.l1_loss((xaba[..., :-1] - xaba[..., 1:]), (xa[..., :-1] - xa[..., 1:])) + \
-                       F.l1_loss((xabb[..., :-1] - xabb[..., 1:]), (xb[..., :-1] - xb[..., 1:]))
-
-        # summary
-        l_total = (config['rec_w'] * loss_recon
-                 + config['cyc_con_w'] * loss_cyc_con
-                 + config['cyc_sty_w'] * loss_cyc_sty
-                 + config['sm_rec_w'] * loss_sm_rec
-                 + config['sm_cyc_w'] * loss_sm_cyc)
-            
-        l_dict = {'loss_total': l_total,
-                  'loss_recon': loss_recon,
-                  'loss_cyc_con': loss_cyc_con,
-                  'loss_cyc_sty': loss_cyc_sty,
-                  'loss_sm_rec': loss_sm_rec,
-                  'loss_sm_cyc': loss_sm_cyc}
+        # loss_recon = F.l1_loss(xaa, xa) + F.l1_loss(xbb, xb)
+        # loss_cyc_con = F.l1_loss(xaba, xa)
+        # loss_cyc_sty = F.l1_loss(xabb, xb)
+        # loss_sm_rec = F.l1_loss((xaa[..., :-1] - xaa[..., 1:]), (xa[..., :-1] - xa[..., 1:])) + \
+        #                F.l1_loss((xbb[..., :-1] - xbb[..., 1:]), (xb[..., :-1] - xb[..., 1:]))
+        # loss_sm_cyc = F.l1_loss((xaba[..., :-1] - xaba[..., 1:]), (xa[..., :-1] - xa[..., 1:])) + \
+        #                F.l1_loss((xabb[..., :-1] - xabb[..., 1:]), (xb[..., :-1] - xb[..., 1:]))
+        #
+        # # summary
+        # l_total = (config['rec_w'] * loss_recon
+        #          + config['cyc_con_w'] * loss_cyc_con
+        #          + config['cyc_sty_w'] * loss_cyc_sty
+        #          + config['sm_rec_w'] * loss_sm_rec
+        #          + config['sm_cyc_w'] * loss_sm_cyc)
+        #
+        # l_dict = {'loss_total': l_total,
+        #           'loss_recon': loss_recon,
+        #           'loss_cyc_con': loss_cyc_con,
+        #           'loss_cyc_sty': loss_cyc_sty,
+        #           'loss_sm_rec': loss_sm_rec,
+        #           'loss_sm_cyc': loss_sm_cyc}
         
         out_dict = {
-            "recon_con": xaa,
             "stylized": xab,
-            "con_gt": xa,
-            "sty_gt": xb
         }
 
-        return out_dict, l_dict
+        return out_dict
 
     def save_checkpoint(self, epoch):
         gen_path = os.path.join(self.model_dir, 'gen_%03d.pt' % epoch)
